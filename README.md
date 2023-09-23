@@ -32,7 +32,7 @@ Before you can run this API, ensure you have the following software installed on
    npm start
    ```
 
-   The API will run at `http://localhost:4200` by default.
+   The API will run at `http://localhost:8000` by default.
 
 ## API Endpoints
 

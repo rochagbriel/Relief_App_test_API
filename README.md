@@ -48,7 +48,13 @@ The API provides the following endpoints:
 
 - **URL:** `/history`
 - **HTTP Method:** POST
-- **Description:** Add a video to the user's history. Provide the video data in the request body.
+- **Description:** Add a video to the user's history. Provide the video url in the request body.
+
+### Clear the history
+
+- **URL:** `/history`
+- **HTTP Method:** DELETE
+- **Description:** Delete all videos from the user's history.
 
 ### List all videos in the bookmarks
 
@@ -60,7 +66,13 @@ The API provides the following endpoints:
 
 - **URL:** `/bookmarks`
 - **HTTP Method:** POST
-- **Description:** Add a video to the user's bookmarks. Provide the video data in the request body.
+- **Description:** Add a video to the user's bookmarks. Provide the video url in the request body.
+
+### Delete a video from bookmarks(extra)
+
+- **URL:** `/bookmarks`
+- **HTTP Method:** DELETE
+- **Description:** Delete a video from the user's bookmarks. Provide the video url in the request body.
 
 ## Contributing
 

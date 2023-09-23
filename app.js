@@ -122,10 +122,6 @@ app.post('/bookmarks', (req, res) => {
       const count = row.count;
 
       if (count > 0) {
-        db.run(
-          'UPDATE bookmarks SET timestamp = CURRENT_TIMESTAMP WHERE videoUrl = ?',
-          [videoUrl]
-        );
         res.status(200).send('This video URL is already in the bookmarks.');
       } else {
         db.run(

@@ -1,7 +1,11 @@
 const express = require('express');
 const sqlite3 = require('sqlite3');
-const morgan = require('morgan');
-const cors = require('cors');
+
+const morgan = require('morgan'); // HTTP request logger
+const cors = require('cors'); // CORS
+const fs = require('fs'); // File system
+const path = require('path'); // Path
+
 const app = express();
 const port = 8000;
 
@@ -16,16 +20,21 @@ const corsOptions = {
 // Enable CORS
 app.use(cors(corsOptions));
 
+// Create a write stream (in append mode)
+const accessLogStream = fs.createWriteStream(path.join(__dirname, 'log.txt'), {
+  flags: 'a',
+});
+
 // Use morgan to log requests to the console
-app.use(morgan('combined'));
+app.use(morgan('combined', { stream: accessLogStream }));
 
 //Create table for history and bookmarks
 db.serialize(() => {
   db.run(
-    'CREATE TABLE IF NOT EXISTS history (id INTEGER PRIMARY KEY, videoUrl TEXT)'
+    'CREATE TABLE IF NOT EXISTS history (id INTEGER PRIMARY KEY, videoUrl TEXT, lastAccess DATETIME DEFAULT CURRENT_TIMESTAMP)'
   );
   db.run(
-    'CREATE TABLE IF NOT EXISTS bookmarks (id INTEGER PRIMARY KEY, videoUrl TEXT)'
+    'CREATE TABLE IF NOT EXISTS bookmarks (id INTEGER PRIMARY KEY, videoUrl TEXT, addDate DATETIME DEFAULT CURRENT_TIMESTAMP)'
   );
 });
 
@@ -44,24 +53,41 @@ app.get('/history', (req, res) => {
 app.post('/history', (req, res) => {
   const videoUrl = req.query.videoUrl;
 
-  // Check if videoUrl is provided
   if (!videoUrl) {
-    res.status(400).send('videoUrl is required');
-
-    // Check if videoUrl is already in history
-  } else if (db.get('SELECT * FROM history WHERE videoUrl = ?', [videoUrl])) {
-    res.status(400).send('videoUrl is already in history');
-  } else {
-    // Insert videoUrl into history
-    db.run('INSERT INTO history (videoUrl) VALUES (?)', [videoUrl], (err) => {
-      if (err) {
-        res.status(500).send(err.message);
-      } else {
-        // If no error, send success message
-        res.send('Video added to history');
-      }
-    });
+    return res.status(400).send('Video URL is required.');
   }
+
+  db.get(
+    'SELECT COUNT(*) as count FROM history WHERE videoUrl = ?',
+    [videoUrl],
+    (err, row) => {
+      if (err) {
+        return res.status(500).send(err.message);
+      }
+
+      const count = row.count;
+
+      if (count > 0) {
+        db.run(
+          'UPDATE history SET timestamp = CURRENT_TIMESTAMP WHERE videoUrl = ?',
+          [videoUrl]
+        );
+        res.status(400).send('This video URL is already in the history.');
+      } else {
+        db.run(
+          'INSERT INTO history (videoUrl) VALUES (?)',
+          [videoUrl],
+          (err) => {
+            if (err) {
+              res.status(500).send(err.message);
+            } else {
+              res.send('Video added to history successfully.');
+            }
+          }
+        );
+      }
+    }
+  );
 });
 
 // List all videos in bookmarks
@@ -79,22 +105,41 @@ app.get('/bookmarks', (req, res) => {
 app.post('/bookmarks', (req, res) => {
   const videoUrl = req.query.videoUrl;
 
-  // Check if videoUrl is provided
   if (!videoUrl) {
-    res.status(400).send('videoUrl is required');
-    // Check if videoUrl is already in bookmarks
-  } else if (db.get('SELECT * FROM bookmarks WHERE videoUrl = ?', [videoUrl])) {
-    res.status(400).send('videoUrl is already in bookmarks');
-  } else {
-    // Insert videoUrl into bookmarks
-    db.run('INSERT INTO bookmarks (videoUrl) VALUES (?)', [videoUrl], (err) => {
-      if (err) {
-        res.status(500).send(err.message);
-      } else {
-        res.send('Video added to bookmarks');
-      }
-    });
+    return res.status(400).send('Video URL is required.');
   }
+
+  db.get(
+    'SELECT COUNT(*) as count FROM bookmarks WHERE videoUrl = ?',
+    [videoUrl],
+    (err, row) => {
+      if (err) {
+        return res.status(500).send(err.message);
+      }
+
+      const count = row.count;
+
+      if (count > 0) {
+        db.run(
+          'UPDATE bookmarks SET timestamp = CURRENT_TIMESTAMP WHERE videoUrl = ?',
+          [videoUrl]
+        );
+        res.status(400).send('This video URL is already in the bookmarks.');
+      } else {
+        db.run(
+          'INSERT INTO bookmarks (videoUrl) VALUES (?)',
+          [videoUrl],
+          (err) => {
+            if (err) {
+              res.status(500).send(err.message);
+            } else {
+              res.send('Video added to bookmarks successfully.');
+            }
+          }
+        );
+      }
+    }
+  );
 });
 
 // Delete video from bookmarks EXTRA
@@ -105,10 +150,6 @@ app.delete('/bookmarks', (req, res) => {
   if (!videoUrl) {
     res.status(400).send('videoUrl is required');
     // Check if videoUrl is in bookmarks
-  } else if (
-    !db.get('SELECT * FROM bookmarks WHERE videoUrl = ?', [videoUrl])
-  ) {
-    res.status(400).send('videoUrl is not in bookmarks');
   } else {
     // Delete videoUrl from bookmarks
     db.run('DELETE FROM bookmarks WHERE videoUrl = ?', [videoUrl], (err) => {

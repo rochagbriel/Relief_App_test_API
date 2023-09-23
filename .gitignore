@@ -17,3 +17,6 @@ yarn-error.log
 
 # Prettier
 .prettierrc 
+
+log.txt
+database.db

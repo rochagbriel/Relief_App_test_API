@@ -9,6 +9,8 @@ const path = require('path'); // Path
 const app = express();
 const port = 8000;
 
+app.use(express.json()); // Parse JSON bodies
+
 // Create database
 const db = new sqlite3.Database('database.db');
 
@@ -51,7 +53,7 @@ app.get('/history', (req, res) => {
 
 // Add video to history
 app.post('/history', (req, res) => {
-  const videoUrl = req.query.videoUrl;
+  const videoUrl = req.body.videoUrl;
 
   if (!videoUrl) {
     return res.status(400).send('Video URL is required.');
@@ -69,10 +71,10 @@ app.post('/history', (req, res) => {
 
       if (count > 0) {
         db.run(
-          'UPDATE history SET timestamp = CURRENT_TIMESTAMP WHERE videoUrl = ?',
+          'UPDATE history SET lastAccess = CURRENT_TIMESTAMP WHERE videoUrl = ?',
           [videoUrl]
         );
-        res.status(400).send('This video URL is already in the history.');
+        // res.status(200).send('This video URL is already in the history.');
       } else {
         db.run(
           'INSERT INTO history (videoUrl) VALUES (?)',
@@ -103,7 +105,7 @@ app.get('/bookmarks', (req, res) => {
 
 // Add video to bookmarks
 app.post('/bookmarks', (req, res) => {
-  const videoUrl = req.query.videoUrl;
+  const videoUrl = req.body.videoUrl;
 
   if (!videoUrl) {
     return res.status(400).send('Video URL is required.');
@@ -124,7 +126,7 @@ app.post('/bookmarks', (req, res) => {
           'UPDATE bookmarks SET timestamp = CURRENT_TIMESTAMP WHERE videoUrl = ?',
           [videoUrl]
         );
-        res.status(400).send('This video URL is already in the bookmarks.');
+        res.status(200).send('This video URL is already in the bookmarks.');
       } else {
         db.run(
           'INSERT INTO bookmarks (videoUrl) VALUES (?)',

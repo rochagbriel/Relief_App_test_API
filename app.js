@@ -154,7 +154,14 @@ app.delete('/bookmarks', (req, res) => {
       if (err) {
         res.status(500).send(err.message);
       } else {
-        res.send('Video deleted from bookmarks');
+        // retorna o array com os items restantes
+        db.all('SELECT * FROM bookmarks', (err, rows) => {
+          if (err) {
+            res.status(500).send(err.message);
+          } else {
+            res.send(rows);
+          }
+        });
       }
     });
   }
@@ -166,7 +173,14 @@ app.delete('/history', (req, res) => {
     if (err) {
       res.status(500).send(err.message);
     } else {
-      res.send('History cleared');
+      // retorna o array com os items restantes
+      db.all('SELECT * FROM history', (err, rows) => {
+        if (err) {
+          res.status(500).send(err.message);
+        } else {
+          res.send(rows);
+        }
+      });
     }
   });
 });

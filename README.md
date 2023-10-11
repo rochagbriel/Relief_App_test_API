@@ -86,4 +86,4 @@ If you'd like to contribute to this project, please follow these guidelines:
 
 ## Credits
 
-Test sent by Relief Applications and coded by Gabriel Rocha.
+Coded by Gabriel Rocha.
